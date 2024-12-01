@@ -1,3 +1,4 @@
+
 # Código principal do Flask (app.py)
 import time
 from flask import Flask, request, jsonify
