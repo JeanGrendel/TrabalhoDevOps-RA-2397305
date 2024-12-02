@@ -15,3 +15,33 @@
 │   ├── requirements.txt
 └── exporter/
     └── mysqld_exporter.env         # Arquivo de configuração/env do MySQL Exporter
+
+
+//Correta:
+
+
+TrabalhoDevOps-RA-2397305/ 
+├── exporter/
+│ └── mysqld_exporter.env
+├── flask/
+│ ├── app.py
+│ ├── Dockerfile_flask
+│ └── requirements.txt
+├── grafana/
+│ ├── dashboards/
+│ │ └── mariadb_dashboard.json
+│ ├── provisioning/
+│ │ └── datasources/
+│ │     ├── datasources.yml
+│ │ └── dashboard.yml
+│ │ └── datasource.yml
+│ │ └── Dockerfile_grafana
+│ │ └── Dockerfile_grafana.bkp
+├── mariadb/
+│ └── Dockerfile_mariadb
+├── prometheus/
+│ └── prometheus.yml
+├── tests/
+│ └── test_aluno.py
+├── docker-compose.yml
+└──  Jenkinsfile

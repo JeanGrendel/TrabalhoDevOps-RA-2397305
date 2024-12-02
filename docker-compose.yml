@@ -5,35 +5,36 @@ services:
     build:
       context: ./flask
       dockerfile: Dockerfile_flask
+    container_name: flask
     ports:
       - "5001:5001"
-    environment:
-      - FLASK_ENV=development
     depends_on:
       - mariadb
+    networks:
+      - app_network
 
   mariadb:
-    build:
-      context: ./mariadb
-      dockerfile: Dockerfile_mariadb
-    ports:
-      - "3306:3306"
+    image: mariadb:latest
+    container_name: mariadb
     environment:
       MYSQL_ROOT_PASSWORD: root_password
       MYSQL_DATABASE: school_db
-      MYSQL_USER: flask_user
-      MYSQL_PASSWORD: flask_password
+    ports:
+      - "3306:3306"  # Expondo a porta 3306 do container para a 3306 da máquina host
+    networks:
+      - app_network
 
   prometheus:
     image: prom/prometheus
-    volumes:
-      - ./prometheus/prometheus.yml:/etc/prometheus/prometheus.yml
+    container_name: prometheus
     ports:
       - "9090:9090"
+    volumes:
+      - ./prometheus/prometheus.yml:/etc/prometheus/prometheus.yml
+    networks:
+      - app_network
     depends_on:
-      - mysqld_exporter
-    command:
-      - "--config.file=/etc/prometheus/prometheus.yml"
+      - flask
 
   mysqld_exporter:
     image: prom/mysqld-exporter
@@ -48,9 +49,14 @@ services:
     build:
       context: ./grafana
       dockerfile: Dockerfile_grafana
+    container_name: grafana
     ports:
       - "3000:3000"
     depends_on:
       - prometheus
-    volumes:
-      - ./grafana/dashboards:/var/lib/grafana/dashboards
+    networks:
+      - app_network
+
+networks:
+  app_network:
+    driver: bridge
