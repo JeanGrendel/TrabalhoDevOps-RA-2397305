@@ -2,58 +2,51 @@ pipeline {
     agent any
 
     environment {
-        COMPOSE_FILE = 'docker-compose.yml'
+        REPOSITORY_URL = 'https://github.com/JeanGrendel/TrabalhoDevOps-RA-2397305.git'
+        BRANCH_NAME = 'main'
     }
 
     stages {
-        stage('Build') {
+        stage('Trazer código do Git') {
             steps {
-                sh '''
-                    docker compose down
-                    docker compose up --build -d
-                    docker compose ps
-                '''
+                // Clonar o repositório do Git
+                git branch: "${BRANCH_NAME}", url: "${REPOSITORY_URL}"
             }
         }
 
-        stage('Wait for Flask') {
+        stage('Build e Deploy') {
             steps {
                 script {
-                    def isReady = false
-                    for (int i = 0; i < 30; i++) { // 30 tentativas (30 segundos)
-                        try {
-                            sh 'curl --fail -X GET http://localhost:5000/alunos'
-                            isReady = true
-                            break
-                        } catch (Exception e) {
-                            echo "Tentativa ${i + 1} de 30 para verificar se o Flask está pronto..."
-                            sleep(1) // Aguarda 1 segundo antes de tentar novamente
-                        }
-                    }
-                    if (!isReady) {
-                        error "Servidor Flask não iniciou a tempo!"
-                    }
+                    // Construir as imagens Docker para cada serviço
+                    sh '''
+                        docker compose build
+                    '''
+
+                    // Subir os containers do Docker com Docker Compose
+                    sh '''
+                        docker compose up -d
+                    '''
                 }
             }
         }
 
-        stage('Test') {
+        stage('Rodar Testes') {
             steps {
-                sh '''
-                    echo "Testando GET /alunos"
-                    curl -s -o /dev/null -w "%{http_code}" -X GET http://localhost:5000/alunos || exit 1
-
-                    echo "Testando POST /alunos"
-                    curl -s -o /dev/null -w "%{http_code}" -X POST http://localhost:5000/alunos \
-                    -H "Content-Type: application/json" \
-                    -d '{
-                        "nome": "Teste",
-                        "sobrenome": "Teste",
-                        "turma": "Teste",
-                        "disciplinas": "Teste1, Teste2"
-                    }' || exit 1
-                '''
+                script {
+                    // Rodar os testes com o pytest (ou qualquer outra ferramenta de testes que você esteja utilizando)
+                    sh 'sleep 40' 
+                    sh 'docker compose run --rm test'
+                }
             }
+        }
+    }
+
+    post {
+        success {
+            echo 'Pipeline executada com sucesso!'
+        }
+        failure {
+            echo 'A pipeline falhou.'
         }
     }
 }
